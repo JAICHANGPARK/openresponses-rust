@@ -1,6 +1,6 @@
 [package]
 name = "openresponses-rust"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 authors = ["JaiChang Park <aristojeff@gmail.com>"]
 description = "A Rust client library for the Open Responses API specification"
