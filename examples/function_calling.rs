@@ -1,4 +1,4 @@
-use open_responses::{Client, CreateResponseBody, Input, Item, Tool, ToolChoiceParam};
+use openresponses_rust::{Client, CreateResponseBody, Input, Item, Tool, ToolChoiceParam};
 use serde_json::json;
 
 #[tokio::main]
@@ -31,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Item::user_message("What's the weather like in San Francisco?"),
         ])),
         tools: Some(vec![get_weather_tool]),
-        tool_choice: Some(ToolChoiceParam::Simple(open_responses::ToolChoice::Auto)),
+        tool_choice: Some(ToolChoiceParam::Simple(openresponses_rust::ToolChoice::Auto)),
         ..Default::default()
     };
 
@@ -43,7 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 match item {
                     Item::Message { content, .. } => {
                         for part in content {
-                            if let open_responses::OutputContent::Text { text, .. } = part {
+                            if let openresponses_rust::OutputContent::Text { text, .. } = part {
                                 println!("Assistant: {}", text);
                             }
                         }

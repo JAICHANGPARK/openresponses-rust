@@ -8,7 +8,7 @@
 //! ## Quick Start
 //!
 //! ```rust,no_run
-//! use open_responses::{Client, CreateResponseBody, Input, Item};
+//! use openresponses_rust::{Client, CreateResponseBody, Input, Item};
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -1,8 +1,8 @@
 # Open Responses
 
-[![Crates.io](https://img.shields.io/crates/v/open-responses)](https://crates.io/crates/open-responses)
-[![Documentation](https://docs.rs/open-responses/badge.svg)](https://docs.rs/open-responses)
-[![License](https://img.shields.io/crates/l/open-responses)](LICENSE)
+[![Crates.io](https://img.shields.io/crates/v/openresponses-rust)](https://crates.io/crates/openresponses-rust)
+[![Documentation](https://docs.rs/openresponses-rust/badge.svg)](https://docs.rs/openresponses-rust)
+[![License](https://img.shields.io/crates/l/openresponses-rust)](LICENSE)
 
 A Rust client library for the Open Responses API specification.
 
@@ -23,7 +23,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-open-responses = "0.1.0"
+openresponses-rust = "0.1.1"
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -32,7 +32,7 @@ tokio = { version = "1", features = ["full"] }
 ### Basic Usage
 
 ```rust
-use open_responses::{Client, CreateResponseBody, Input, Item};
+use openresponses_rust::{Client, CreateResponseBody, Input, Item};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -56,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Streaming Responses
 
 ```rust
-use open_responses::{StreamingClient, CreateResponseBody, Input, Item};
+use openresponses_rust::{StreamingClient, CreateResponseBody, Input, Item};
 use futures::StreamExt;
 
 #[tokio::main]
@@ -75,10 +75,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     while let Some(event) = stream.next().await {
         match event {
-            Ok(open_responses::StreamingEvent::OutputTextDelta { delta, .. }) => {
+            Ok(openresponses_rust::StreamingEvent::OutputTextDelta { delta, .. }) => {
                 print!("{}", delta);
             }
-            Ok(open_responses::StreamingEvent::Done) => break,
+            Ok(openresponses_rust::StreamingEvent::Done) => break,
             Err(e) => eprintln!("Error: {}", e),
             _ => {}
         }
@@ -91,7 +91,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Function Calling
 
 ```rust
-use open_responses::{Client, CreateResponseBody, Input, Item, Tool, ToolChoiceParam};
+use openresponses_rust::{Client, CreateResponseBody, Input, Item, Tool, ToolChoiceParam};
 use serde_json::json;
 
 let get_weather = Tool::function("get_weather")
@@ -110,7 +110,7 @@ let request = CreateResponseBody {
         Item::user_message("What's the weather in Paris?")
     ])),
     tools: Some(vec![get_weather]),
-    tool_choice: Some(ToolChoiceParam::Simple(open_responses::ToolChoice::Auto)),
+    tool_choice: Some(ToolChoiceParam::Simple(openresponses_rust::ToolChoice::Auto)),
     ..Default::default()
 };
 ```
@@ -122,7 +122,7 @@ let request = CreateResponseBody {
 Items are the fundamental unit of context in Open Responses. They represent messages, tool calls, tool outputs, and reasoning.
 
 ```rust
-use open_responses::Item;
+use openresponses_rust::Item;
 
 // Create different types of items
 let user_msg = Item::user_message("Hello!");
@@ -135,7 +135,7 @@ let reference = Item::reference("msg_123");
 ### Content Types
 
 ```rust
-use open_responses::InputContent;
+use openresponses_rust::InputContent;
 
 // Text
 let text = InputContent::text("Hello");
@@ -144,7 +144,7 @@ let text = InputContent::text("Hello");
 let image = InputContent::image_url("https://example.com/image.png");
 let image_high_res = InputContent::image_url_with_detail(
     "https://example.com/image.png",
-    open_responses::ImageDetail::High
+    openresponses_rust::ImageDetail::High
 );
 
 // File
@@ -157,7 +157,7 @@ let video = InputContent::video_url("https://example.com/video.mp4");
 ### Tools
 
 ```rust
-use open_responses::Tool;
+use openresponses_rust::Tool;
 use serde_json::json;
 
 let tool = Tool::function("search")
@@ -236,5 +236,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Resources
 
 - [Open Responses Specification](https://github.com/openresponses/spec)
-- [Crates.io](https://crates.io/crates/open-responses)
-- [Documentation](https://docs.rs/open-responses)
+- [Crates.io](https://crates.io/crates/openresponses-rust)
+- [Documentation](https://docs.rs/openresponses-rust)

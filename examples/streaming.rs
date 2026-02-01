@@ -1,4 +1,4 @@
-use open_responses::{StreamingClient, CreateResponseBody, Input, Item};
+use openresponses_rust::{StreamingClient, CreateResponseBody, Input, Item};
 use futures::StreamExt;
 
 #[tokio::main]
@@ -24,16 +24,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         match event_result {
             Ok(event) => {
                 match event {
-                    open_responses::StreamingEvent::OutputTextDelta { delta, .. } => {
+                    openresponses_rust::StreamingEvent::OutputTextDelta { delta, .. } => {
                         print!("{}", delta);
                     }
-                    open_responses::StreamingEvent::ResponseCompleted { .. } => {
+                    openresponses_rust::StreamingEvent::ResponseCompleted { .. } => {
                         println!("\n\n[Response completed]");
                     }
-                    open_responses::StreamingEvent::ResponseFailed { .. } => {
+                    openresponses_rust::StreamingEvent::ResponseFailed { .. } => {
                         println!("\n\n[Response failed]");
                     }
-                    open_responses::StreamingEvent::Done => {
+                    openresponses_rust::StreamingEvent::Done => {
                         println!("\n[Stream ended]");
                         break;
                     }
