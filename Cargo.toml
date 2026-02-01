@@ -10,7 +10,7 @@ documentation = "https://www.openresponses.org/"
 readme = "README.md"
 keywords = ["openai", "api", "llm", "responses", "client"]
 categories = ["api-bindings", "web-programming"]
-rust-version = "1.70"
+rust-version = "1.85.0"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
