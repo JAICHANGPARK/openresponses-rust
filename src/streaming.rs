@@ -1,5 +1,4 @@
-use bytes::Bytes;
-use eventsource_stream::{Eventsource, EventStream as SseEventStream};
+use eventsource_stream::Eventsource;
 use futures::{Stream, StreamExt};
 use reqwest::{Client as ReqwestClient, header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, HeaderMap, HeaderValue}};
 use thiserror::Error;
@@ -12,18 +11,16 @@ const DEFAULT_BASE_URL: &str = "https://api.openai.com/v1";
 pub enum StreamingError {
     #[error("HTTP request failed: {0}")]
     HttpError(#[from] reqwest::Error),
-    
+
     #[error("Event stream error: {0}")]
     StreamError(String),
-    
+
     #[error("JSON parsing error: {0}")]
     JsonError(#[from] serde_json::Error),
-    
+
     #[error("API error: {message}")]
     ApiError { message: String },
 }
-
-pub type EventStream = SseEventStream<impl Stream<Item = Result<Bytes, reqwest::Error>>>;
 
 #[derive(Clone)]
 pub struct StreamingClient {

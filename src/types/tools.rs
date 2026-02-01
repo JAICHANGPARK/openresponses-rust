@@ -1,6 +1,5 @@
 use super::enums::ToolChoice;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type")]
@@ -28,23 +27,20 @@ impl Tool {
     }
 
     pub fn with_description<S: Into<String>>(mut self, desc: S) -> Self {
-        if let Tool::Function { description, .. } = &mut self {
-            *description = Some(desc.into());
-        }
+        let Tool::Function { description, .. } = &mut self;
+        *description = Some(desc.into());
         self
     }
 
     pub fn with_parameters(mut self, params: serde_json::Value) -> Self {
-        if let Tool::Function { parameters, .. } = &mut self {
-            *parameters = Some(params);
-        }
+        let Tool::Function { parameters, .. } = &mut self;
+        *parameters = Some(params);
         self
     }
 
     pub fn strict(mut self, strict: bool) -> Self {
-        if let Tool::Function { strict: s, .. } = &mut self {
-            *s = Some(strict);
-        }
+        let Tool::Function { strict: s, .. } = &mut self;
+        *s = Some(strict);
         self
     }
 }

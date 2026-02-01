@@ -1,12 +1,12 @@
 [package]
 name = "openresponses-rust"
 version = "0.1.1"
-edition = "2021"
-authors = ["Your Name <your.email@example.com>"]
+edition = "2024"
+authors = ["JaiChang Park <aristojeff@gmail.com>"]
 description = "A Rust client library for the Open Responses API specification"
 license = "Apache-2.0"
-repository = "https://github.com/yourusername/open-responses"
-documentation = "https://docs.rs/open-responses"
+repository = "https://github.com/JAICHANGPARK/openresponses-rust"
+documentation = "https://www.openresponses.org/"
 readme = "README.md"
 keywords = ["openai", "api", "llm", "responses", "client"]
 categories = ["api-bindings", "web-programming"]

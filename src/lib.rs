@@ -34,7 +34,7 @@ pub mod streaming;
 pub mod types;
 
 pub use client::{Client, ClientError};
-pub use streaming::{StreamingClient, StreamingError, EventStream};
+pub use streaming::{StreamingClient, StreamingError};
 pub use types::*;
 
 #[cfg(test)]
