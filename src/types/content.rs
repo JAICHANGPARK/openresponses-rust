@@ -3,17 +3,19 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type")]
-pub enum InputContent {
+pub enum MessageContent {
     #[serde(rename = "input_text")]
-    Text { text: String },
+    InputText { text: String },
     #[serde(rename = "input_image")]
-    Image {
+    InputImage {
+        #[serde(skip_serializing_if = "Option::is_none")]
         image_url: Option<String>,
         #[serde(default)]
         detail: ImageDetail,
     },
     #[serde(rename = "input_file")]
-    File {
+    InputFile {
+        #[serde(skip_serializing_if = "Option::is_none")]
         filename: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         file_data: Option<String>,
@@ -21,56 +23,9 @@ pub enum InputContent {
         file_url: Option<String>,
     },
     #[serde(rename = "input_video")]
-    Video { video_url: String },
-}
-
-impl InputContent {
-    pub fn text<S: Into<String>>(text: S) -> Self {
-        InputContent::Text { text: text.into() }
-    }
-
-    pub fn image_url<S: Into<String>>(url: S) -> Self {
-        InputContent::Image {
-            image_url: Some(url.into()),
-            detail: ImageDetail::default(),
-        }
-    }
-
-    pub fn image_url_with_detail<S: Into<String>>(url: S, detail: ImageDetail) -> Self {
-        InputContent::Image {
-            image_url: Some(url.into()),
-            detail,
-        }
-    }
-
-    pub fn file_url<S: Into<String>>(url: S) -> Self {
-        InputContent::File {
-            filename: None,
-            file_data: None,
-            file_url: Some(url.into()),
-        }
-    }
-
-    pub fn file_data<S: Into<String>>(data: S, filename: Option<String>) -> Self {
-        InputContent::File {
-            filename,
-            file_data: Some(data.into()),
-            file_url: None,
-        }
-    }
-
-    pub fn video_url<S: Into<String>>(url: S) -> Self {
-        InputContent::Video {
-            video_url: url.into(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(tag = "type")]
-pub enum OutputContent {
+    InputVideo { video_url: String },
     #[serde(rename = "output_text")]
-    Text {
+    OutputText {
         text: String,
         #[serde(default)]
         annotations: Vec<Annotation>,
@@ -87,9 +42,16 @@ pub enum OutputContent {
     ReasoningText { text: String },
 }
 
-impl OutputContent {
-    pub fn text<S: Into<String>>(text: S) -> Self {
-        OutputContent::Text {
+pub type InputContent = MessageContent;
+pub type OutputContent = MessageContent;
+
+impl MessageContent {
+    pub fn input_text<S: Into<String>>(text: S) -> Self {
+        MessageContent::InputText { text: text.into() }
+    }
+
+    pub fn output_text<S: Into<String>>(text: S) -> Self {
+        MessageContent::OutputText {
             text: text.into(),
             annotations: Vec::new(),
             logprobs: None,
@@ -97,9 +59,58 @@ impl OutputContent {
     }
 
     pub fn refusal<S: Into<String>>(text: S) -> Self {
-        OutputContent::Refusal {
+        MessageContent::Refusal {
             refusal: text.into(),
         }
+    }
+
+    // Compatibility helpers
+    pub fn text<S: Into<String>>(text: S) -> Self {
+        Self::input_text(text)
+    }
+
+    pub fn image_url<S: Into<String>>(url: S) -> Self {
+        MessageContent::InputImage {
+            image_url: Some(url.into()),
+            detail: ImageDetail::default(),
+        }
+    }
+
+    pub fn image_url_with_detail<S: Into<String>>(url: S, detail: ImageDetail) -> Self {
+        MessageContent::InputImage {
+            image_url: Some(url.into()),
+            detail,
+        }
+    }
+
+    pub fn file_url<S: Into<String>>(url: S) -> Self {
+        MessageContent::InputFile {
+            filename: None,
+            file_data: None,
+            file_url: Some(url.into()),
+        }
+    }
+
+    pub fn file_data<S: Into<String>>(data: S, filename: Option<String>) -> Self {
+        MessageContent::InputFile {
+            filename,
+            file_data: Some(data.into()),
+            file_url: None,
+        }
+    }
+
+    pub fn video_url<S: Into<String>>(url: S) -> Self {
+        MessageContent::InputVideo {
+            video_url: url.into(),
+        }
+    }
+
+    pub fn summary<S: Into<String>>(text: S) -> Self {
+        MessageContent::SummaryText { text: text.into() }
+    }
+
+    pub fn reasoning<S: Into<String>>(text: S) -> Self {
+        MessageContent::ReasoningText { text: text.into() }
     }
 }
 
@@ -133,13 +144,12 @@ pub struct TopLogProb {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum Content {
-    Input(InputContent),
-    Output(OutputContent),
+    Part(MessageContent),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum ContentParam {
-    Array(Vec<InputContent>),
+    Array(Vec<MessageContent>),
     Single(String),
 }

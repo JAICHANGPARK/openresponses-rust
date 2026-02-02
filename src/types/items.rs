@@ -12,7 +12,7 @@ pub enum Item {
         status: Option<MessageStatus>,
         role: MessageRole,
         #[serde(with = "content_serde")]
-        content: Vec<OutputContent>,
+        content: Vec<MessageContent>,
     },
     #[serde(rename = "function_call")]
     FunctionCall {
@@ -37,8 +37,8 @@ pub enum Item {
         #[serde(skip_serializing_if = "Option::is_none")]
         id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        content: Option<Vec<InputContent>>,
-        summary: Vec<InputContent>,
+        content: Option<Vec<MessageContent>>,
+        summary: Vec<MessageContent>,
         #[serde(skip_serializing_if = "Option::is_none")]
         encrypted_content: Option<String>,
     },
@@ -50,7 +50,7 @@ pub enum Item {
 #[serde(untagged)]
 pub enum FunctionOutput {
     Text(String),
-    Content(Vec<InputContent>),
+    Content(Vec<MessageContent>),
 }
 
 impl Item {
@@ -59,11 +59,11 @@ impl Item {
             id: None,
             status: None,
             role: MessageRole::User,
-            content: vec![OutputContent::text(content)],
+            content: vec![MessageContent::input_text(content)],
         }
     }
 
-    pub fn user_message_with_content(content: Vec<OutputContent>) -> Self {
+    pub fn user_message_with_content(content: Vec<MessageContent>) -> Self {
         Item::Message {
             id: None,
             status: None,
@@ -77,7 +77,7 @@ impl Item {
             id: None,
             status: None,
             role: MessageRole::Assistant,
-            content: vec![OutputContent::text(content)],
+            content: vec![MessageContent::output_text(content)],
         }
     }
 
@@ -86,7 +86,7 @@ impl Item {
             id: None,
             status: None,
             role: MessageRole::System,
-            content: vec![OutputContent::text(content)],
+            content: vec![MessageContent::input_text(content)],
         }
     }
 
@@ -95,7 +95,7 @@ impl Item {
             id: None,
             status: None,
             role: MessageRole::Developer,
-            content: vec![OutputContent::text(content)],
+            content: vec![MessageContent::input_text(content)],
         }
     }
 
@@ -109,7 +109,7 @@ mod content_serde {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     pub fn serialize<S: Serializer>(
-        content: &Vec<OutputContent>,
+        content: &Vec<MessageContent>,
         serializer: S,
     ) -> Result<S::Ok, S::Error> {
         content.serialize(serializer)
@@ -117,7 +117,7 @@ mod content_serde {
 
     pub fn deserialize<'de, D: Deserializer<'de>>(
         deserializer: D,
-    ) -> Result<Vec<OutputContent>, D::Error> {
+    ) -> Result<Vec<MessageContent>, D::Error> {
         let content = Deserialize::deserialize(deserializer)?;
         Ok(content)
     }
@@ -146,7 +146,7 @@ mod output_serde {
             return Ok(FunctionOutput::Text(s.to_string()));
         }
 
-        if let Ok(contents) = serde_json::from_value::<Vec<InputContent>>(value.clone()) {
+        if let Ok(contents) = serde_json::from_value::<Vec<MessageContent>>(value.clone()) {
             return Ok(FunctionOutput::Content(contents));
         }
 

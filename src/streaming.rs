@@ -5,7 +5,7 @@ use thiserror::Error;
 
 use crate::types::{CreateResponseBody, StreamingEvent};
 
-const DEFAULT_BASE_URL: &str = "https://api.openai.com/v1";
+const DEFAULT_BASE_URL: &str = "https://api.openai.com";
 
 #[derive(Error, Debug)]
 pub enum StreamingError {
@@ -22,21 +22,36 @@ pub enum StreamingError {
     ApiError { message: String },
 }
 
-#[derive(Clone)]
-pub struct StreamingClient {
-    inner: ReqwestClient,
-    base_url: String,
+pub struct StreamingClientBuilder {
     api_key: String,
+    base_url: Option<String>,
 }
 
-impl StreamingClient {
+impl StreamingClientBuilder {
     pub fn new(api_key: impl Into<String>) -> Self {
-        Self::with_base_url(api_key, DEFAULT_BASE_URL)
+        Self {
+            api_key: api_key.into(),
+            base_url: None,
+        }
     }
-    
-    pub fn with_base_url(api_key: impl Into<String>, base_url: impl Into<String>) -> Self {
-        let api_key = api_key.into();
-        let base_url = base_url.into();
+
+    pub fn base_url(mut self, base_url: impl Into<String>) -> Self {
+        self.base_url = Some(base_url.into());
+        self
+    }
+
+    pub fn build(self) -> StreamingClient {
+        let mut base_url = self.base_url.unwrap_or_else(|| DEFAULT_BASE_URL.to_string());
+        
+        // Remove trailing slash if present
+        if base_url.ends_with('/') {
+            base_url.pop();
+        }
+        
+        // Automatically append /v1 if it's not present in the path
+        if !base_url.ends_with("/v1") {
+            base_url.push_str("/v1");
+        }
         
         let mut headers = HeaderMap::new();
         headers.insert(
@@ -53,7 +68,32 @@ impl StreamingClient {
             .build()
             .expect("Failed to create HTTP client");
         
-        Self { inner, base_url, api_key }
+        StreamingClient {
+            inner,
+            base_url,
+            api_key: self.api_key,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct StreamingClient {
+    inner: ReqwestClient,
+    base_url: String,
+    api_key: String,
+}
+
+impl StreamingClient {
+    pub fn new(api_key: impl Into<String>) -> Self {
+        StreamingClientBuilder::new(api_key).build()
+    }
+
+    pub fn builder(api_key: impl Into<String>) -> StreamingClientBuilder {
+        StreamingClientBuilder::new(api_key)
+    }
+    
+    pub fn with_base_url(api_key: impl Into<String>, base_url: impl Into<String>) -> Self {
+        StreamingClientBuilder::new(api_key).base_url(base_url).build()
     }
     
     pub async fn stream_response(
@@ -138,13 +178,12 @@ mod tests {
     fn test_streaming_client_creation() {
         let client = StreamingClient::new("test-api-key");
         assert_eq!(client.api_key, "test-api-key");
-        assert_eq!(client.base_url, DEFAULT_BASE_URL);
+        assert_eq!(client.base_url, "https://api.openai.com/v1");
     }
     
     #[test]
-    fn test_streaming_client_with_base_url() {
-        let client = StreamingClient::with_base_url("test-key", "https://custom.api.com");
-        assert_eq!(client.api_key, "test-key");
-        assert_eq!(client.base_url, "https://custom.api.com");
+    fn test_streaming_client_with_base_url_normalization() {
+        let client = StreamingClient::with_base_url("test-key", "https://openrouter.ai/api");
+        assert_eq!(client.base_url, "https://openrouter.ai/api/v1");
     }
 }

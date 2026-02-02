@@ -14,6 +14,13 @@ pub enum Tool {
         #[serde(skip_serializing_if = "Option::is_none")]
         strict: Option<bool>,
     },
+    #[serde(rename = "mcp")]
+    Mcp {
+        server_label: String,
+        server_url: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        allowed_tools: Option<Vec<String>>,
+    },
 }
 
 impl Tool {
@@ -26,21 +33,39 @@ impl Tool {
         }
     }
 
+    pub fn mcp<S1: Into<String>, S2: Into<String>>(label: S1, url: S2) -> Self {
+        Tool::Mcp {
+            server_label: label.into(),
+            server_url: url.into(),
+            allowed_tools: None,
+        }
+    }
+
+    pub fn with_allowed_tools(mut self, tools: Vec<String>) -> Self {
+        if let Tool::Mcp { allowed_tools, .. } = &mut self {
+            *allowed_tools = Some(tools);
+        }
+        self
+    }
+
     pub fn with_description<S: Into<String>>(mut self, desc: S) -> Self {
-        let Tool::Function { description, .. } = &mut self;
-        *description = Some(desc.into());
+        if let Tool::Function { description, .. } = &mut self {
+            *description = Some(desc.into());
+        }
         self
     }
 
     pub fn with_parameters(mut self, params: serde_json::Value) -> Self {
-        let Tool::Function { parameters, .. } = &mut self;
-        *parameters = Some(params);
+        if let Tool::Function { parameters, .. } = &mut self {
+            *parameters = Some(params);
+        }
         self
     }
 
     pub fn strict(mut self, strict: bool) -> Self {
-        let Tool::Function { strict: s, .. } = &mut self;
-        *s = Some(strict);
+        if let Tool::Function { strict: s, .. } = &mut self {
+            *s = Some(strict);
+        }
         self
     }
 }

@@ -52,7 +52,7 @@ pub enum StreamingEvent {
         item_id: String,
         output_index: i32,
         content_index: i32,
-        part: OutputContent,
+        part: MessageContent,
     },
     #[serde(rename = "response.content_part.done")]
     ContentPartDone {
@@ -60,7 +60,7 @@ pub enum StreamingEvent {
         item_id: String,
         output_index: i32,
         content_index: i32,
-        part: OutputContent,
+        part: MessageContent,
     },
     #[serde(rename = "response.output_text.delta")]
     OutputTextDelta {
@@ -142,7 +142,7 @@ pub enum StreamingEvent {
         item_id: String,
         output_index: i32,
         summary_index: i32,
-        part: OutputContent,
+        part: MessageContent,
     },
     #[serde(rename = "response.reasoning_summary_part.done")]
     ReasoningSummaryPartDone {
@@ -150,7 +150,7 @@ pub enum StreamingEvent {
         item_id: String,
         output_index: i32,
         summary_index: i32,
-        part: OutputContent,
+        part: MessageContent,
     },
     #[serde(rename = "response.output_text.annotation.added")]
     OutputTextAnnotationAdded {

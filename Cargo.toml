@@ -1,6 +1,6 @@
 [package]
 name = "openresponses-rust"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2024"
 authors = ["JaiChang Park <aristojeff@gmail.com>"]
 description = "A Rust client library for the Open Responses API specification"
@@ -39,3 +39,15 @@ path = "examples/streaming.rs"
 [[example]]
 name = "function_calling"
 path = "examples/function_calling.rs"
+
+[[example]]
+name = "direct_input"
+path = "examples/direct_input.rs"
+
+[[example]]
+name = "env_config"
+path = "examples/env_config.rs"
+
+[[example]]
+name = "stateful_follow_up"
+path = "examples/stateful_follow_up.rs"

@@ -1,4 +1,4 @@
-use open_responses::types::*;
+use openresponses_rust::types::*;
 
 #[test]
 fn test_item_creation() {
@@ -44,17 +44,17 @@ fn test_item_creation() {
 
 #[test]
 fn test_content_creation() {
-    let text = InputContent::text("Hello world");
-    assert!(matches!(text, InputContent::Text { text } if text == "Hello world"));
+    let text = MessageContent::input_text("Hello world");
+    assert!(matches!(text, MessageContent::InputText { text } if text == "Hello world"));
 
-    let image = InputContent::image_url("https://example.com/image.png");
+    let image = MessageContent::image_url("https://example.com/image.png");
     assert!(
-        matches!(image, InputContent::Image { image_url: Some(url), .. } if url == "https://example.com/image.png")
+        matches!(image, MessageContent::InputImage { image_url: Some(url), .. } if url == "https://example.com/image.png")
     );
 
-    let file_url = InputContent::file_url("https://example.com/doc.pdf");
+    let file_url = MessageContent::file_url("https://example.com/doc.pdf");
     assert!(
-        matches!(file_url, InputContent::File { file_url: Some(url), .. } if url == "https://example.com/doc.pdf")
+        matches!(file_url, MessageContent::InputFile { file_url: Some(url), .. } if url == "https://example.com/doc.pdf")
     );
 }
 

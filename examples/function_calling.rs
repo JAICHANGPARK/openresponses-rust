@@ -43,7 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 match item {
                     Item::Message { content, .. } => {
                         for part in content {
-                            if let openresponses_rust::OutputContent::Text { text, .. } = part {
+                            if let openresponses_rust::MessageContent::OutputText { text, .. } = part {
                                 println!("Assistant: {}", text);
                             }
                         }

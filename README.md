@@ -36,6 +36,7 @@ use openresponses_rust::{Client, CreateResponseBody, Input, Item};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Uses default OpenAI base URL
     let client = Client::new("your-api-key");
     
     let request = CreateResponseBody {
@@ -50,6 +51,60 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Response: {:?}", response);
     
     Ok(())
+}
+```
+
+### Custom API URL (OpenRouter, LM Studio, etc.)
+
+You can choose between direct string input or using environment variables. The client automatically appends `/v1` if it's missing.
+
+#### Option 1: Direct String Input (Simple)
+Best for local servers like LM Studio.
+
+```rust
+let client = Client::builder("lm-studio")
+    .base_url("http://localhost:1234") // No /v1 needed
+    .build();
+```
+
+#### Option 2: Environment Variables (Recommended for Production)
+Best for keeping secrets out of your code.
+
+```rust
+let api_key = std::env::var("API_KEY")?;
+let api_url = std::env::var("API_URL").unwrap_or_else(|_| "https://api.openai.com".to_string());
+
+let client = Client::builder(api_key)
+    .base_url(api_url)
+    .build();
+```
+
+### Stateful Conversations
+
+Use `previous_response_id` to continue a conversation without re-sending the entire history (if supported by the provider).
+
+```rust
+let request = CreateResponseBody {
+    model: Some("gpt-4o".to_string()),
+    input: Some(Input::Single("What was my last question?".to_string())),
+    previous_response_id: Some("resp_123...".to_string()),
+    ..Default::default()
+};
+```
+
+### Streaming
+
+```rust
+use openresponses_rust::{StreamingClient, StreamingEvent};
+use futures::StreamExt;
+
+let client = StreamingClient::new("your-api-key");
+let mut stream = client.stream_response(request).await?;
+
+while let Some(event) = stream.next().await {
+    if let Ok(StreamingEvent::OutputTextDelta { delta, .. }) = event {
+        print!("{}", delta);
+    }
 }
 ```
 
