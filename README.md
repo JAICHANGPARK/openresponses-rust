@@ -6,16 +6,15 @@
 
 A Rust client library for the Open Responses API specification.
 
-Open Responses is an open-source specification for building multi-provider, interoperable LLM interfaces based on the OpenAI Responses API. It defines a shared schema and tooling layer that enable a unified experience for calling language models, streaming results, and composing agentic workflows—independent of provider.
+Open Responses is an open-source specification for building multi-provider, interoperable LLM interfaces based on the OpenAI Responses API. This library provides a unified experience for calling language models, streaming results, and composing agentic workflows across different providers.
 
-## Features
+## Key Features
 
-- **Complete Type Coverage**: All request/response types from the Open Responses specification
-- **Streaming Support**: Built-in SSE (Server-Sent Events) streaming for real-time responses
-- **Type-Safe**: Strongly typed API with comprehensive error handling
-- **Async/Await**: Built on Tokio for high-performance async operations
-- **Easy to Use**: Simple, intuitive API with builder patterns
-- **Multi-Provider Ready**: Works with any Open Responses compatible API
+- **Schema Compliance**: Strictly follows the latest OpenAI Responses API spec.
+- **Auto URL Normalization**: Just provide the base domain; we'll handle the `/v1/responses` path for you.
+- **MCP Tool Support**: Compatible with Model Context Protocol (MCP) tools (e.g., in LM Studio).
+- **Stateful & Stateless**: Support for both standard chat and stateful follow-ups using `previous_response_id`.
+- **Rich Streaming**: Comprehensive SSE event handling for real-time applications.
 
 ## Installation
 
@@ -23,20 +22,51 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-openresponses-rust = "0.1.2"
+openresponses-rust = "0.2.0"
 tokio = { version = "1", features = ["full"] }
 ```
 
+## How to Configure Your API
+
+The library provides a flexible `ClientBuilder` to suit your development or production environment.
+
+### 1. Direct Input (Simple & Quick)
+Best for local testing or when using local LLM servers like **LM Studio**. You can pass string literals directly.
+
+```rust
+use openresponses_rust::Client;
+
+let client = Client::builder("any-key")
+    .base_url("http://localhost:1234") // No need to add /v1/responses
+    .build();
+```
+
+### 2. Environment Variables (Recommended for Production)
+Best for keeping secrets and configurations out of your source code.
+
+```rust
+use openresponses_rust::Client;
+use std::env;
+
+let api_key = env::var("API_KEY").expect("API_KEY is required");
+let api_url = env::var("API_URL").unwrap_or_else(|_| "https://api.openai.com".to_string());
+
+let client = Client::builder(api_key)
+    .base_url(api_url)
+    .build();
+```
+
+---
+
 ## Quick Start
 
-### Basic Usage
+### Basic Chat
 
 ```rust
 use openresponses_rust::{Client, CreateResponseBody, Input, Item};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Uses default OpenAI base URL
     let client = Client::new("your-api-key");
     
     let request = CreateResponseBody {
@@ -48,40 +78,44 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     
     let response = client.create_response(request).await?;
-    println!("Response: {:?}", response);
+    
+    for item in response.output {
+        if let Item::Message { content, .. } = item {
+            println!("Assistant: {:?}", content);
+        }
+    }
     
     Ok(())
 }
 ```
 
-### Custom API URL (OpenRouter, LM Studio, etc.)
-
-You can choose between direct string input or using environment variables. The client automatically appends `/v1` if it's missing.
-
-#### Option 1: Direct String Input (Simple)
-Best for local servers like LM Studio.
+### Streaming Responses
 
 ```rust
-let client = Client::builder("lm-studio")
-    .base_url("http://localhost:1234") // No /v1 needed
-    .build();
+use openresponses_rust::{StreamingClient, StreamingEvent};
+use futures::StreamExt;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = StreamingClient::new("your-api-key");
+    let mut stream = client.stream_response(request).await?;
+
+    while let Some(event) = stream.next().await {
+        match event {
+            Ok(StreamingEvent::OutputTextDelta { delta, .. }) => {
+                print!("{}", delta);
+            }
+            Ok(StreamingEvent::Done) => break,
+            _ => {}
+        }
+    }
+    Ok(())
+}
 ```
 
-#### Option 2: Environment Variables (Recommended for Production)
-Best for keeping secrets out of your code.
+### Stateful Follow-up
 
-```rust
-let api_key = std::env::var("API_KEY")?;
-let api_url = std::env::var("API_URL").unwrap_or_else(|_| "https://api.openai.com".to_string());
-
-let client = Client::builder(api_key)
-    .base_url(api_url)
-    .build();
-```
-
-### Stateful Conversations
-
-Use `previous_response_id` to continue a conversation without re-sending the entire history (if supported by the provider).
+Continue a conversation by referencing a previous response ID (if supported by your provider).
 
 ```rust
 let request = CreateResponseBody {
@@ -92,204 +126,21 @@ let request = CreateResponseBody {
 };
 ```
 
-### Streaming
-
-```rust
-use openresponses_rust::{StreamingClient, StreamingEvent};
-use futures::StreamExt;
-
-let client = StreamingClient::new("your-api-key");
-let mut stream = client.stream_response(request).await?;
-
-while let Some(event) = stream.next().await {
-    if let Ok(StreamingEvent::OutputTextDelta { delta, .. }) = event {
-        print!("{}", delta);
-    }
-}
-```
-
-### Streaming Responses
-
-```rust
-use openresponses_rust::{StreamingClient, CreateResponseBody, Input, Item};
-use futures::StreamExt;
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = StreamingClient::new("your-api-key");
-    
-    let request = CreateResponseBody {
-        model: Some("gpt-4o".to_string()),
-        input: Some(Input::Items(vec![
-            Item::user_message("Count from 1 to 5")
-        ])),
-        ..Default::default()
-    };
-    
-    let mut stream = client.stream_response(request).await?;
-    
-    while let Some(event) = stream.next().await {
-        match event {
-            Ok(openresponses_rust::StreamingEvent::OutputTextDelta { delta, .. }) => {
-                print!("{}", delta);
-            }
-            Ok(openresponses_rust::StreamingEvent::Done) => break,
-            Err(e) => eprintln!("Error: {}", e),
-            _ => {}
-        }
-    }
-    
-    Ok(())
-}
-```
-
-### Function Calling
-
-```rust
-use openresponses_rust::{Client, CreateResponseBody, Input, Item, Tool, ToolChoiceParam};
-use serde_json::json;
-
-let get_weather = Tool::function("get_weather")
-    .with_description("Get weather for a location")
-    .with_parameters(json!({
-        "type": "object",
-        "properties": {
-            "location": { "type": "string" }
-        },
-        "required": ["location"]
-    }));
-
-let request = CreateResponseBody {
-    model: Some("gpt-4o".to_string()),
-    input: Some(Input::Items(vec![
-        Item::user_message("What's the weather in Paris?")
-    ])),
-    tools: Some(vec![get_weather]),
-    tool_choice: Some(ToolChoiceParam::Simple(openresponses_rust::ToolChoice::Auto)),
-    ..Default::default()
-};
-```
-
-## Core Concepts
-
-### Items
-
-Items are the fundamental unit of context in Open Responses. They represent messages, tool calls, tool outputs, and reasoning.
-
-```rust
-use openresponses_rust::Item;
-
-// Create different types of items
-let user_msg = Item::user_message("Hello!");
-let assistant_msg = Item::assistant_message("Hi there!");
-let system_msg = Item::system_message("You are helpful.");
-let dev_msg = Item::developer_message("Follow these rules.");
-let reference = Item::reference("msg_123");
-```
-
-### Content Types
-
-```rust
-use openresponses_rust::InputContent;
-
-// Text
-let text = InputContent::text("Hello");
-
-// Image
-let image = InputContent::image_url("https://example.com/image.png");
-let image_high_res = InputContent::image_url_with_detail(
-    "https://example.com/image.png",
-    openresponses_rust::ImageDetail::High
-);
-
-// File
-let file = InputContent::file_url("https://example.com/doc.pdf");
-
-// Video
-let video = InputContent::video_url("https://example.com/video.mp4");
-```
-
-### Tools
-
-```rust
-use openresponses_rust::Tool;
-use serde_json::json;
-
-let tool = Tool::function("search")
-    .with_description("Search the web")
-    .with_parameters(json!({
-        "type": "object",
-        "properties": {
-            "query": { "type": "string" }
-        }
-    }))
-    .strict(true);
-```
-
-## API Reference
-
-### Client
-
-The `Client` type provides synchronous (blocking) API calls:
-
-- `Client::new(api_key)` - Create a client with default base URL
-- `Client::with_base_url(api_key, base_url)` - Create with custom base URL
-- `client.create_response(request)` - Send a request and get a response
-
-### StreamingClient
-
-The `StreamingClient` provides SSE streaming:
-
-- `StreamingClient::new(api_key)` - Create a streaming client
-- `client.stream_response(request)` - Returns a stream of events
-
-### Types
-
-All types from the Open Responses specification are available:
-
-- `CreateResponseBody` - Request body for creating responses
-- `ResponseResource` - Response from the API
-- `Item` - Core item types (messages, function calls, etc.)
-- `InputContent` / `OutputContent` - Content types
-- `StreamingEvent` - Streaming event types
-- `Tool` / `ToolChoiceParam` - Tool definitions
-- Enums: `MessageRole`, `MessageStatus`, `ToolChoice`, etc.
-
 ## Examples
 
-See the `examples/` directory for complete working examples:
+Check the `examples/` directory for ready-to-run code:
 
-- `basic_usage.rs` - Simple API usage
-- `streaming.rs` - Streaming responses
-- `function_calling.rs` - Tool/Function calling
+- `direct_input.rs`: Simplified connection to local servers.
+- `env_config.rs`: Using environment variables.
+- `stateful_follow_up.rs`: Chaining conversations.
+- `streaming.rs`: SSE streaming implementation.
+- `function_calling.rs`: Using tools and functions.
 
-Run examples with:
-
+Run any example:
 ```bash
-export OPENAI_API_KEY="your-api-key"
-cargo run --example basic_usage
-cargo run --example streaming
-cargo run --example function_calling
-```
-
-## Testing
-
-Run the test suite:
-
-```bash
-cargo test
+cargo run --example direct_input
 ```
 
 ## License
 
 This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Resources
-
-- [Open Responses Specification](https://github.com/openresponses/spec)
-- [Crates.io](https://crates.io/crates/openresponses-rust)
-- [Documentation](https://docs.rs/openresponses-rust)
