@@ -10,11 +10,12 @@ Open Responses is an open-source specification for building multi-provider, inte
 
 ## Key Features
 
-- **Schema Compliance**: Strictly follows the latest OpenAI Responses API spec.
+- **Schema Coverage**: Models core request/response shapes, extensible items/tools, and provider-prefixed payloads.
 - **Auto URL Normalization**: Just provide the base domain; we'll handle the `/v1/responses` path for you.
 - **MCP Tool Support**: Compatible with Model Context Protocol (MCP) tools (e.g., in LM Studio).
 - **Stateful & Stateless**: Support for both standard chat and stateful follow-ups using `previous_response_id`.
-- **Rich Streaming**: Comprehensive SSE event handling for real-time applications.
+- **Protocol-Aware Streaming**: Validates SSE `event` / payload `type` consistency, preserves raw event names, and enforces key lifecycle rules.
+- **Structured Errors**: Parses JSON API error bodies into typed details for both sync and streaming clients.
 
 ## Installation
 

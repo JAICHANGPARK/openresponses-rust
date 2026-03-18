@@ -9,7 +9,7 @@ pub struct ResponseResource {
     pub created_at: i64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub completed_at: Option<i64>,
-    pub status: String,
+    pub status: ResponseStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub incomplete_details: Option<IncompleteDetails>,
     pub model: String,
@@ -55,12 +55,13 @@ pub struct IncompleteDetails {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Error {
-    pub code: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
     pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub param: Option<String>,
-    #[serde(rename = "type")]
-    pub error_type: ErrorType,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub error_type: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -111,4 +112,28 @@ pub struct InputTokensDetails {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct OutputTokensDetails {
     pub reasoning_tokens: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ApiErrorDetail {
+    pub message: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub error_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub param: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ApiErrorResponse {
+    pub error: ApiErrorDetail,
+}
+
+impl ApiErrorResponse {
+    pub fn parse(body: &str) -> Option<ApiErrorDetail> {
+        serde_json::from_str::<ApiErrorResponse>(body)
+            .ok()
+            .map(|response| response.error)
+    }
 }

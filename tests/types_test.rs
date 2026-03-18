@@ -111,7 +111,7 @@ fn test_function_call_item() {
         call_id: "call_456".to_string(),
         name: "get_weather".to_string(),
         arguments: r#"{"location": "San Francisco"}"#.to_string(),
-        status: FunctionCallStatus::Completed,
+        status: Some(FunctionCallStatus::Completed),
     };
 
     assert!(matches!(func_call, Item::FunctionCall { name, .. } if name == "get_weather"));
