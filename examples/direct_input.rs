@@ -1,4 +1,4 @@
-use openresponses_rust::{Client, CreateResponseBody, Input};
+use openresponses_rust::{Client, ClientError, CreateResponseBody, Input};
 
 /// 이 예제는 환경변수를 사용하지 않고 코드에 직접 API URL과 키를 입력하는 방법을 보여줍니다.
 /// 로컬에서 실행 중인 LM Studio나 특정 프록시 서버에 연결할 때 유용합니다.
@@ -25,6 +25,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match client.create_response(request).await {
         Ok(response) => {
             println!("성공! 응답 ID: {}", response.id);
+        }
+        Err(ClientError::ApiError {
+            status_code,
+            error,
+            raw_body,
+        }) => {
+            eprintln!("연결 실패 (HTTP {}):", status_code);
+            if let Some(error) = error {
+                eprintln!("  message: {}", error.message);
+                if let Some(error_type) = error.error_type {
+                    eprintln!("  type: {}", error_type);
+                }
+                if let Some(code) = error.code {
+                    eprintln!("  code: {}", code);
+                }
+            } else {
+                eprintln!("  body: {}", raw_body);
+            }
         }
         Err(e) => {
             eprintln!("연결 실패: {}. 서버가 실행 중인지 확인하세요.", e);

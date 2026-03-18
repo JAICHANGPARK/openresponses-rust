@@ -1,4 +1,4 @@
-use openresponses_rust::{Client, CreateResponseBody, Input};
+use openresponses_rust::{Client, ClientError, CreateResponseBody, Input};
 use std::env;
 
 /// 이 예제는 운영 환경에서 권장되는 환경변수(Environment Variables)를 통한 설정 방법을 보여줍니다.
@@ -27,6 +27,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match client.create_response(request).await {
         Ok(response) => {
             println!("응답 성공: {}", response.id);
+        }
+        Err(ClientError::ApiError {
+            status_code,
+            error,
+            raw_body,
+        }) => {
+            eprintln!("API 오류 (HTTP {}):", status_code);
+            if let Some(error) = error {
+                eprintln!("  message: {}", error.message);
+                if let Some(error_type) = error.error_type {
+                    eprintln!("  type: {}", error_type);
+                }
+                if let Some(code) = error.code {
+                    eprintln!("  code: {}", code);
+                }
+            } else {
+                eprintln!("  body: {}", raw_body);
+            }
         }
         Err(e) => {
             eprintln!("오류 발생: {}", e);

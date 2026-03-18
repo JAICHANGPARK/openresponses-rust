@@ -55,12 +55,13 @@ pub struct IncompleteDetails {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Error {
-    pub code: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
     pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub param: Option<String>,
-    #[serde(rename = "type")]
-    pub error_type: ErrorType,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub error_type: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -116,8 +117,8 @@ pub struct OutputTokensDetails {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ApiErrorDetail {
     pub message: String,
-    #[serde(rename = "type")]
-    pub error_type: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub error_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub param: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
