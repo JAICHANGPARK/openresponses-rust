@@ -97,10 +97,10 @@ async fn test_streaming_client_returns_structured_api_error() {
         .await;
 
     let client = StreamingClient::with_base_url("test-key", server.url());
-    let error = client
-        .stream_response(CreateResponseBody::default())
-        .await
-        .unwrap_err();
+    let error = match client.stream_response(CreateResponseBody::default()).await {
+        Ok(_) => panic!("expected API error"),
+        Err(error) => error,
+    };
 
     match error {
         StreamingError::ApiError {
