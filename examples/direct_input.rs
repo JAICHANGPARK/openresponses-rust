@@ -1,4 +1,4 @@
-use openresponses_rust::{Client, CreateResponseBody, Input, Item};
+use openresponses_rust::{Client, CreateResponseBody, Input};
 
 /// 이 예제는 환경변수를 사용하지 않고 코드에 직접 API URL과 키를 입력하는 방법을 보여줍니다.
 /// 로컬에서 실행 중인 LM Studio나 특정 프록시 서버에 연결할 때 유용합니다.

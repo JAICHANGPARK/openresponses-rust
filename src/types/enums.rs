@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -156,4 +157,59 @@ pub enum ErrorType {
     ModelError,
     #[serde(rename = "too_many_requests")]
     TooManyRequests,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ResponseStatus {
+    Queued,
+    InProgress,
+    Completed,
+    Failed,
+    Incomplete,
+    Other(String),
+}
+
+impl ResponseStatus {
+    pub fn as_str(&self) -> &str {
+        match self {
+            ResponseStatus::Queued => "queued",
+            ResponseStatus::InProgress => "in_progress",
+            ResponseStatus::Completed => "completed",
+            ResponseStatus::Failed => "failed",
+            ResponseStatus::Incomplete => "incomplete",
+            ResponseStatus::Other(value) => value.as_str(),
+        }
+    }
+}
+
+impl fmt::Display for ResponseStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl Serialize for ResponseStatus {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> Deserialize<'de> for ResponseStatus {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value = String::deserialize(deserializer)?;
+        Ok(match value.as_str() {
+            "queued" => ResponseStatus::Queued,
+            "in_progress" => ResponseStatus::InProgress,
+            "completed" => ResponseStatus::Completed,
+            "failed" => ResponseStatus::Failed,
+            "incomplete" => ResponseStatus::Incomplete,
+            _ => ResponseStatus::Other(value),
+        })
+    }
 }

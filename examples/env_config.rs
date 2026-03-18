@@ -1,4 +1,4 @@
-use openresponses_rust::{Client, CreateResponseBody, Input, Item};
+use openresponses_rust::{Client, CreateResponseBody, Input};
 use std::env;
 
 /// 이 예제는 운영 환경에서 권장되는 환경변수(Environment Variables)를 통한 설정 방법을 보여줍니다.

@@ -8,7 +8,9 @@ use serde_json::Value;
 use std::collections::HashMap;
 use thiserror::Error;
 
-use crate::types::{CreateResponseBody, Item, MessageStatus, StreamingEvent};
+use crate::types::{
+    ApiErrorResponse, CreateResponseBody, Item, MessageStatus, StreamingEvent,
+};
 
 const DEFAULT_BASE_URL: &str = "https://api.openai.com";
 
@@ -23,8 +25,12 @@ pub enum StreamingError {
     #[error("JSON parsing error: {0}")]
     JsonError(#[from] serde_json::Error),
 
-    #[error("API error: {message}")]
-    ApiError { message: String },
+    #[error("API error ({status_code}): {raw_body}")]
+    ApiError {
+        status_code: u16,
+        error: Option<crate::types::ApiErrorDetail>,
+        raw_body: String,
+    },
 
     #[error("SSE event name `{sse_event}` does not match payload type `{body_type}`")]
     EventTypeMismatch { sse_event: String, body_type: String },
@@ -129,9 +135,15 @@ impl StreamingClient {
             .send()
             .await?;
 
-        if !response.status().is_success() {
+        let status = response.status();
+
+        if !status.is_success() {
             let error_text = response.text().await?;
-            return Err(StreamingError::ApiError { message: error_text });
+            return Err(StreamingError::ApiError {
+                status_code: status.as_u16(),
+                error: ApiErrorResponse::parse(&error_text),
+                raw_body: error_text,
+            });
         }
 
         let stream = response.bytes_stream();
@@ -162,9 +174,15 @@ impl StreamingClient {
             .send()
             .await?;
 
-        if !response.status().is_success() {
+        let status = response.status();
+
+        if !status.is_success() {
             let error_text = response.text().await?;
-            return Err(StreamingError::ApiError { message: error_text });
+            return Err(StreamingError::ApiError {
+                status_code: status.as_u16(),
+                error: ApiErrorResponse::parse(&error_text),
+                raw_body: error_text,
+            });
         }
 
         let stream = response.bytes_stream();

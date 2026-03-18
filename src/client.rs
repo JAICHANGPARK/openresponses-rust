@@ -2,7 +2,7 @@ use reqwest::{Client as ReqwestClient, header::{AUTHORIZATION, CONTENT_TYPE, Hea
 use serde_json;
 use thiserror::Error;
 
-use crate::types::{CreateResponseBody, ResponseResource};
+use crate::types::{ApiErrorResponse, CreateResponseBody, ResponseResource};
 
 const DEFAULT_BASE_URL: &str = "https://api.openai.com";
 
@@ -14,8 +14,12 @@ pub enum ClientError {
     #[error("JSON parsing error: {0}")]
     JsonError(#[from] serde_json::Error),
     
-    #[error("API error: {code} - {message}")]
-    ApiError { code: String, message: String },
+    #[error("API error ({status_code}): {raw_body}")]
+    ApiError {
+        status_code: u16,
+        error: Option<crate::types::ApiErrorDetail>,
+        raw_body: String,
+    },
     
     #[error("Invalid header value: {0}")]
     InvalidHeader(String),
@@ -106,8 +110,9 @@ impl Client {
         if !status.is_success() {
             let error_text = response.text().await?;
             return Err(ClientError::ApiError {
-                code: status.to_string(),
-                message: error_text,
+                status_code: status.as_u16(),
+                error: ApiErrorResponse::parse(&error_text),
+                raw_body: error_text,
             });
         }
         
@@ -130,8 +135,9 @@ impl Client {
         
         if !status.is_success() {
             return Err(ClientError::ApiError {
-                code: status.to_string(),
-                message: body,
+                status_code: status.as_u16(),
+                error: ApiErrorResponse::parse(&body),
+                raw_body: body,
             });
         }
         
