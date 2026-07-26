@@ -2,7 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026.7.26] - 2026-07-26
+
+### Added
+- **OpenResponses 2026-04-24 Spec Support**:
+  - **Conversation Compaction**: Added `Item::Compaction`, `CompactResponseBody`, `CompactResource`, and `Client::compact_response` / `compact_response_raw` for `/v1/responses/compact`.
+  - **Assistant Message Phase**: Added `MessagePhase` (`commentary`, `final_answer`) field to assistant messages to preserve intermediate reasoning vs final answer state for models like `gpt-5.3-codex`.
+  - **Video Content Input**: Added support for `MessageContent::InputVideo` (`input_video`).
+  - **WebSocket Type Definitions**: Added `WebSocketResponseCreateEvent`, `WebSocketErrorEvent`, and `WebSocketErrorPayload`.
+- **Package Updates**:
+  - Upgraded dependencies (`reqwest`, `tokio`, `bytes`, `mockito`, etc.).
+
 ## [0.2.0] - 2026-02-02
+
 
 ### Added
 - **ClientBuilder & StreamingClientBuilder**: Introduced a builder pattern for easier client configuration.

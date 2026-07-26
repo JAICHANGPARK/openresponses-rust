@@ -549,6 +549,7 @@ fn item_id(item: &Item) -> Option<&str> {
         | Item::FunctionCall { id, .. }
         | Item::FunctionCallOutput { id, .. }
         | Item::Reasoning { id, .. }
+        | Item::Compaction { id, .. }
         | Item::Extension { id, .. } => id.as_deref(),
         Item::ItemReference { id } => Some(id.as_str()),
     }
@@ -564,6 +565,7 @@ fn item_is_incomplete(item: &Item) -> bool {
             matches!(status, Some(crate::types::FunctionCallOutputStatus::Incomplete))
         }
         Item::Reasoning { status, .. } => matches!(status, Some(MessageStatus::Incomplete)),
+        Item::Compaction { .. } => false,
         Item::Extension { status, .. } => status.as_deref() == Some("incomplete"),
         Item::ItemReference { .. } => false,
     }

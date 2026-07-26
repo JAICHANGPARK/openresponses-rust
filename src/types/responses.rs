@@ -137,3 +137,30 @@ impl ApiErrorResponse {
             .map(|response| response.error)
     }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CompactResource {
+    pub id: String,
+    pub object: String,
+    pub output: Vec<Item>,
+    pub created_at: i64,
+    pub usage: Usage,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct WebSocketErrorEvent {
+    pub r#type: String,
+    pub status: u16,
+    pub error: WebSocketErrorPayload,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct WebSocketErrorPayload {
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub error_type: Option<String>,
+    pub code: String,
+    pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub param: Option<String>,
+}
+

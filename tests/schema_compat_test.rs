@@ -88,6 +88,7 @@ fn test_invalid_role_content_is_rejected_on_serialize() {
         status: None,
         role: MessageRole::Assistant,
         content: vec![MessageContent::input_text("not allowed")],
+        phase: None,
     };
 
     let error = serde_json::to_string(&invalid).unwrap_err();

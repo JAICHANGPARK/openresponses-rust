@@ -2,7 +2,9 @@ use reqwest::{Client as ReqwestClient, header::{AUTHORIZATION, CONTENT_TYPE, Hea
 use serde_json;
 use thiserror::Error;
 
-use crate::types::{ApiErrorResponse, CreateResponseBody, ResponseResource};
+use crate::types::{
+    ApiErrorResponse, CompactResource, CompactResponseBody, CreateResponseBody, ResponseResource,
+};
 
 const DEFAULT_BASE_URL: &str = "https://api.openai.com";
 
@@ -141,6 +143,55 @@ impl Client {
             });
         }
         
+        Ok(body)
+    }
+
+    pub async fn compact_response(&self, request: CompactResponseBody) -> Result<CompactResource, ClientError> {
+        let url = format!("{}/responses/compact", self.base_url);
+
+        let response = self.inner
+            .post(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", self.api_key))
+            .json(&request)
+            .send()
+            .await?;
+
+        let status = response.status();
+
+        if !status.is_success() {
+            let error_text = response.text().await?;
+            return Err(ClientError::ApiError {
+                status_code: status.as_u16(),
+                error: ApiErrorResponse::parse(&error_text),
+                raw_body: error_text,
+            });
+        }
+
+        let response_body = response.json::<CompactResource>().await?;
+        Ok(response_body)
+    }
+
+    pub async fn compact_response_raw(&self, request: CompactResponseBody) -> Result<String, ClientError> {
+        let url = format!("{}/responses/compact", self.base_url);
+
+        let response = self.inner
+            .post(&url)
+            .header(AUTHORIZATION, format!("Bearer {}", self.api_key))
+            .json(&request)
+            .send()
+            .await?;
+
+        let status = response.status();
+        let body = response.text().await?;
+
+        if !status.is_success() {
+            return Err(ClientError::ApiError {
+                status_code: status.as_u16(),
+                error: ApiErrorResponse::parse(&body),
+                raw_body: body,
+            });
+        }
+
         Ok(body)
     }
 }

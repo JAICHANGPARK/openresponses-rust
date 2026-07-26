@@ -213,3 +213,11 @@ impl<'de> Deserialize<'de> for ResponseStatus {
         })
     }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum MessagePhase {
+    Commentary,
+    FinalAnswer,
+}
+

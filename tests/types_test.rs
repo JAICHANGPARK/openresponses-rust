@@ -133,3 +133,51 @@ fn test_streaming_event_serialization() {
     assert!(json.contains("response.output_text.delta"));
     assert!(json.contains("Hello"));
 }
+
+#[test]
+fn test_compaction_item_roundtrip() {
+    let compaction = Item::compaction("encrypted_payload_123");
+    let json = serde_json::to_string(&compaction).unwrap();
+    assert!(json.contains("compaction"));
+    assert!(json.contains("encrypted_payload_123"));
+
+    let deserialized: Item = serde_json::from_str(&json).unwrap();
+    assert_eq!(compaction, deserialized);
+}
+
+#[test]
+fn test_message_phase_roundtrip() {
+    let msg = Item::assistant_message_with_phase("Draft step", MessagePhase::Commentary);
+    let json = serde_json::to_string(&msg).unwrap();
+    assert!(json.contains("commentary"));
+    assert!(json.contains("phase"));
+
+    let deserialized: Item = serde_json::from_str(&json).unwrap();
+    assert_eq!(msg, deserialized);
+}
+
+#[test]
+fn test_input_video_content() {
+    let video = MessageContent::video_url("https://example.com/video.mp4");
+    let json = serde_json::to_string(&video).unwrap();
+    assert!(json.contains("input_video"));
+    assert!(json.contains("https://example.com/video.mp4"));
+
+    let deserialized: MessageContent = serde_json::from_str(&json).unwrap();
+    assert_eq!(video, deserialized);
+}
+
+#[test]
+fn test_compact_response_body_serialization() {
+    let compact_req = CompactResponseBody {
+        model: "gpt-5".to_string(),
+        input: Some(Input::Items(vec![Item::user_message("Long conversation")])),
+        previous_response_id: Some("resp_123".to_string()),
+        ..Default::default()
+    };
+
+    let json = serde_json::to_string(&compact_req).unwrap();
+    assert!(json.contains("gpt-5"));
+    assert!(json.contains("resp_123"));
+}
+

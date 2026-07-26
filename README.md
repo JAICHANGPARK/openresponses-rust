@@ -11,6 +11,9 @@ Open Responses is an open-source specification for building multi-provider, inte
 ## Key Features
 
 - **Schema Coverage**: Models core request/response shapes, extensible items/tools, and provider-prefixed payloads.
+- **Conversation Compaction**: Support for `/v1/responses/compact` and `Item::Compaction` to compact conversation context.
+- **Assistant Message Phase**: Preserves intermediate `commentary` vs `final_answer` phase on assistant messages for reasoning models (`gpt-5.3-codex`).
+- **Media Inputs**: Support for text, image, file, and video (`input_video`) inputs.
 - **Auto URL Normalization**: Just provide the base domain; we'll handle the `/v1/responses` path for you.
 - **MCP Tool Support**: Compatible with Model Context Protocol (MCP) tools (e.g., in LM Studio).
 - **Stateful & Stateless**: Support for both standard chat and stateful follow-ups using `previous_response_id`.
@@ -23,7 +26,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-openresponses-rust = "0.2.0"
+openresponses-rust = "2026.7.26"
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -136,6 +139,7 @@ Check the `examples/` directory for ready-to-run code:
 - `stateful_follow_up.rs`: Chaining conversations.
 - `streaming.rs`: SSE streaming implementation.
 - `function_calling.rs`: Using tools and functions.
+- `compaction.rs`: Conversation compaction and message phases.
 
 Run any example:
 ```bash

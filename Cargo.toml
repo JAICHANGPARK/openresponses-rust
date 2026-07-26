@@ -1,6 +1,6 @@
 [package]
 name = "openresponses-rust"
-version = "0.2.0"
+version = "2026.7.26"
 edition = "2024"
 authors = ["JaiChang Park <aristojeff@gmail.com>"]
 description = "A Rust client library for the Open Responses API specification"
@@ -15,18 +15,18 @@ rust-version = "1.85.0"
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-reqwest = { version = "0.13.1", features = ["json", "stream"] }
-tokio = { version = "1.35", features = ["full"] }
-thiserror = "2.0.18"
+reqwest = { version = "0.13", features = ["json", "stream"] }
+tokio = { version = "1.40", features = ["full"] }
+thiserror = "2.0"
 async-trait = "0.1"
 futures = "0.3"
 eventsource-stream = "0.2"
-bytes = "1.5"
+bytes = "1.11"
 url = "2.5"
 
 [dev-dependencies]
 tokio-test = "0.4"
-mockito = "1.2"
+mockito = "1.7"
 
 [[example]]
 name = "basic_usage"
@@ -51,3 +51,8 @@ path = "examples/env_config.rs"
 [[example]]
 name = "stateful_follow_up"
 path = "examples/stateful_follow_up.rs"
+
+[[example]]
+name = "compaction"
+path = "examples/compaction.rs"
+

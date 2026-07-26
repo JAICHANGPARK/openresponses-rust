@@ -111,3 +111,29 @@ pub struct ReasoningConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub summary: Option<ReasoningSummary>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+pub struct CompactResponseBody {
+    pub model: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub input: Option<Input>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub previous_response_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub instructions: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prompt_cache_key: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct WebSocketResponseCreateEvent {
+    #[serde(default = "default_ws_response_create_type")]
+    pub r#type: String,
+    #[serde(flatten)]
+    pub body: CreateResponseBody,
+}
+
+fn default_ws_response_create_type() -> String {
+    "response.create".to_string()
+}
+

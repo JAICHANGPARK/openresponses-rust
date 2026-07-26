@@ -9,6 +9,7 @@ pub enum Item {
         status: Option<MessageStatus>,
         role: MessageRole,
         content: Vec<MessageContent>,
+        phase: Option<MessagePhase>,
     },
     FunctionCall {
         id: Option<String>,
@@ -29,6 +30,11 @@ pub enum Item {
         content: Option<Vec<MessageContent>>,
         summary: Vec<MessageContent>,
         encrypted_content: Option<String>,
+    },
+    Compaction {
+        id: Option<String>,
+        encrypted_content: String,
+        created_by: Option<String>,
     },
     ItemReference {
         id: String,
@@ -76,6 +82,7 @@ impl Item {
             status: None,
             role: MessageRole::User,
             content: vec![MessageContent::input_text(content)],
+            phase: None,
         }
     }
 
@@ -85,6 +92,7 @@ impl Item {
             status: None,
             role: MessageRole::User,
             content,
+            phase: None,
         }
     }
 
@@ -94,6 +102,17 @@ impl Item {
             status: None,
             role: MessageRole::Assistant,
             content: vec![MessageContent::output_text(content)],
+            phase: None,
+        }
+    }
+
+    pub fn assistant_message_with_phase<S: Into<String>>(content: S, phase: MessagePhase) -> Self {
+        Item::Message {
+            id: None,
+            status: None,
+            role: MessageRole::Assistant,
+            content: vec![MessageContent::output_text(content)],
+            phase: Some(phase),
         }
     }
 
@@ -103,6 +122,7 @@ impl Item {
             status: None,
             role: MessageRole::System,
             content: vec![MessageContent::input_text(content)],
+            phase: None,
         }
     }
 
@@ -112,6 +132,15 @@ impl Item {
             status: None,
             role: MessageRole::Developer,
             content: vec![MessageContent::input_text(content)],
+            phase: None,
+        }
+    }
+
+    pub fn compaction<S: Into<String>>(encrypted_content: S) -> Self {
+        Item::Compaction {
+            id: None,
+            encrypted_content: encrypted_content.into(),
+            created_by: None,
         }
     }
 
@@ -165,6 +194,7 @@ struct MessageItemRaw {
     status: Option<MessageStatus>,
     role: MessageRole,
     content: Value,
+    phase: Option<MessagePhase>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -194,6 +224,13 @@ struct ReasoningRaw {
 }
 
 #[derive(Debug, Deserialize)]
+struct CompactionRaw {
+    id: Option<String>,
+    encrypted_content: String,
+    created_by: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
 struct ItemReferenceRaw {
     id: String,
 }
@@ -205,6 +242,7 @@ fn item_to_value(item: &Item) -> Result<Value, String> {
             status,
             role,
             content,
+            phase,
         } => {
             validate_message_content(role, content)?;
 
@@ -221,6 +259,9 @@ fn item_to_value(item: &Item) -> Result<Value, String> {
                 "content".to_string(),
                 serde_json::to_value(content).map_err(|e| e.to_string())?,
             );
+            if let Some(phase) = phase {
+                object.insert("phase".to_string(), serde_json::to_value(phase).map_err(|e| e.to_string())?);
+            }
             Ok(Value::Object(object))
         }
         Item::FunctionCall {
@@ -299,6 +340,25 @@ fn item_to_value(item: &Item) -> Result<Value, String> {
             }
             Ok(Value::Object(object))
         }
+        Item::Compaction {
+            id,
+            encrypted_content,
+            created_by,
+        } => {
+            let mut object = Map::new();
+            object.insert("type".to_string(), Value::String("compaction".to_string()));
+            if let Some(id) = id {
+                object.insert("id".to_string(), Value::String(id.clone()));
+            }
+            object.insert(
+                "encrypted_content".to_string(),
+                Value::String(encrypted_content.clone()),
+            );
+            if let Some(created_by) = created_by {
+                object.insert("created_by".to_string(), Value::String(created_by.clone()));
+            }
+            Ok(Value::Object(object))
+        }
         Item::ItemReference { id } => {
             let mut object = Map::new();
             object.insert("type".to_string(), Value::String("item_reference".to_string()));
@@ -347,6 +407,7 @@ fn item_from_value(value: Value) -> Result<Item, String> {
                 status: raw.status,
                 role: raw.role,
                 content,
+                phase: raw.phase,
             })
         }
         "function_call" => {
@@ -379,6 +440,15 @@ fn item_from_value(value: Value) -> Result<Item, String> {
                 content: raw.content,
                 summary: raw.summary,
                 encrypted_content: raw.encrypted_content,
+            })
+        }
+        "compaction" => {
+            let raw: CompactionRaw =
+                serde_json::from_value(Value::Object(object)).map_err(|e| e.to_string())?;
+            Ok(Item::Compaction {
+                id: raw.id,
+                encrypted_content: raw.encrypted_content,
+                created_by: raw.created_by,
             })
         }
         "item_reference" => {
